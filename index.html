@@ -2,228 +2,402 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Контроль транспорта у шлагбаума</title>
+    <title>Система распознавания транспорта </title>
     <style>
-        *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
-        body{background:#0d1117;color:#e6edf3;line-height:1.6;padding:20px;min-height:100vh}
-        .wrapper{max-width:1000px;margin:0 auto}
-        .header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #238636}
-        .header h1{color:#3fb950;margin-bottom:15px;font-size:2.3rem}
-        .upload-box{background:#161b22;padding:25px;border-radius:8px;margin-bottom:25px;text-align:center;border:1px solid #30363d}
-        .file-box{margin:20px 0}
-        .file-label{display:inline-block;padding:14px 28px;background:#238636;color:#fff;border-radius:6px;cursor:pointer;font-size:1.1rem;transition:all .25s}
-        .file-label:hover{background:#2ea043}
-        #videoInput{display:none}
-        .video-box{position:relative;width:100%;background:#000;border-radius:8px;overflow:hidden;margin:20px 0}
-        #videoPlayer{width:100%;display:block}
-        #overlay{position:absolute;top:0;left:0;width:100%;height:100%}
-        .controls{display:flex;justify-content:center;gap:15px;margin:25px 0;flex-wrap:wrap}
-        .btn{padding:14px 32px;background:#1f6feb;color:white;border:none;border-radius:6px;cursor:pointer;font-size:1.05rem;min-width:180px;transition:all .25s}
-        .btn:hover{background:#2c78f3}
-        .btn:disabled{background:#484f58;cursor:default}
-        #processBtn{background:#238636}
-        #processBtn:hover:not(:disabled){background:#2ea043}
-        .status-box{padding:20px;background:#161b22;border-radius:8px;text-align:center;font-size:1.15rem;margin:20px 0;border:1px solid #30363d}
-        .detected{background:rgba(248,81,73,0.15);border-color:#f85149;color:#f85149}
-        .no-target{background:rgba(46,160,67,0.15);border-color:#3fb950;color:#3fb950}
-        .notes{background:#161b22;padding:25px;border-radius:8px;margin-top:30px}
-        .notes h2{color:#3fb950;margin-bottom:20px}
-        .notes ul{padding-left:25px}
-        .notes li{margin-bottom:12px}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #0d1117;
+            color: #e6edf3;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #161b22;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #30363d;
+        }
+        header {
+            padding: 25px;
+            background: #0d1117;
+            border-bottom: 2px solid #238636;
+            text-align: center;
+        }
+        h1 {
+            color: #3fb950;
+            margin-bottom: 15px;
+            font-size: 2.4rem;
+        }
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1rem;
+        }
+        .upload-section {
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid #30363d;
+        }
+        .file-upload {
+            margin: 20px 0;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #238636;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        .file-label:hover {
+            background: #2ea043;
+            transform: translateY(-2px);
+        }
+        #videoInput {
+            display: none;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        #videoPlayer {
+            width: 100%;
+            display: block;
+        }
+        #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 14px 32px;
+            background: #1f6feb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            min-width: 180px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #2c78f3;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background: #484f58;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #processBtn {
+            background: #238636;
+        }
+        #processBtn:hover:not(:disabled) {
+            background: #2ea043;
+        }
+        .status-box {
+            padding: 20px;
+            background: #161b22;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.15rem;
+            margin: 20px 0;
+            border: 1px solid #30363d;
+        }
+        .status-detected {
+            background: rgba(248,81,73,0.15);
+            border-color: #f85149;
+            color: #f85149;
+        }
+        .status-ready {
+            background: rgba(46,160,67,0.15);
+            border-color: #3fb950;
+            color: #3fb950;
+        }
+        .progress-container {
+            margin: 25px 0;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        progress {
+            width: 100%;
+            height: 20px;
+            border-radius: 10px;
+            border: 1px solid #30363d;
+        }
+        progress::-webkit-progress-bar {
+            background: #0d1117;
+            border-radius: 10px;
+        }
+        progress::-webkit-progress-value {
+            background: #238636;
+            border-radius: 10px;
+        }
+        .info-box {
+            background: #161b22;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border: 1px solid #30363d;
+        }
+        .info-box h2 {
+            color: #3fb950;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        .info-box ul {
+            padding-left: 25px;
+        }
+        .info-box li {
+            margin-bottom: 12px;
+            line-height: 1.8;
+        }
     </style>
 </head>
 <body>
-<div class="wrapper">
-    <div class="header">
-        <h1>Система контроля транспорта</h1>
-        <p>Обнаружение автомобилей у шлагбаума</p>
-    </div>
-
-    <div class="upload-box">
-        <h2>Выберите видеозапись (MP4)</h2>
-        <div class="file-box">
-            <label for="videoInput" class="file-label">Загрузить видео</label>
-            <input type="file" id="videoInput" accept="video/mp4">
+<div class="container">
+    <header>
+        <h1>Система распознавания транспорта</h1>
+        <p class="subtitle">Распознавание транспорта перед шлагбаумом</p>
+    </header>
+    <div class="upload-section">
+        <h2>Загрузите видео для анализа</h2>
+        <div class="file-upload">
+            <label for="videoInput" class="file-label">Выбрать видеофайл</label>
+            <input type="file" id="videoInput" accept="video/mp4,video/avi">
+        </div>
+        <div class="progress-container">
+            <div class="progress-header">
+                <span>Прогресс обработки:</span>
+                <span id="processPercent">0%</span>
+            </div>
+            <progress id="processProgress" value="0" max="100"></progress>
         </div>
     </div>
-
-    <div class="video-box">
+    <div class="video-container">
         <video id="videoPlayer" controls></video>
-        <canvas id="overlay"></canvas>
+        <canvas id="overlayCanvas"></canvas>
     </div>
-
     <div class="controls">
         <button id="processBtn" class="btn" disabled>Запуск анализа</button>
-        <button id="pauseBtn" class="btn" disabled>Приостановить</button>
+        <button id="pauseBtn" class="btn" disabled>Пауза</button>
         <button id="resetBtn" class="btn" disabled>Сбросить</button>
     </div>
-
-    <div id="statusText" class="status-box">Статус: Ожидание загрузки видео</div>
-
-    <div class="notes">
-        <h2>Рекомендации:</h2>
+    <div id="statusText" class="status-box status-ready">Статус: Ожидание загрузки видео</div>
+    <div class="info-box">
+        <h2>Инструкция по использованию</h2>
         <ul>
-            <li>Используйте браузер Chrome или Edge</li>
-            <li>Загружайте видео в формате MP4</li>
-            <li>Оптимальная длительность видео: до 2 минут</li>
-            <li>Система распознаёт автомобили и мотоциклы</li>
-            <li>Для повторного анализа перезагрузите страницу</li>
-            <li>Основано на базе JS с использованием Tensorflow by SeniorSpeedex!</li>
+            <li><strong>1.</strong> Загрузите видеофайл в формате MP4/li>
+            <li><strong>2.</strong> Нажмите "Запуск анализа" для начала обработки</li>
+            <li><strong>3.</strong> Транспортные средства будут выделены красными рамками</li>
+            <li><strong>4.</strong> Используйте "Пауза" для временной остановки анализа</li>
+            <li><strong>5.</strong> Для нового видео нажмите "Сбросить"</li>
+            <li><strong>6.</strong> Поддерживаются все виды транспорта: автомобили, грузовики, автобусы и др.</li>
+            <li><strong>7.</strong> Создано на базе JavaScript, Tensorflow, размещено на GitHub Pages!</li>
         </ul>
     </div>
 </div>
-
 <script>
     const videoPlayer = document.getElementById('videoPlayer');
-    const overlay = document.getElementById('overlay');
-    const ctx = overlay.getContext('2d');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const ctx = overlayCanvas.getContext('2d');
     const videoInput = document.getElementById('videoInput');
     const processBtn = document.getElementById('processBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const resetBtn = document.getElementById('resetBtn');
     const statusText = document.getElementById('statusText');
-
+    const processProgress = document.getElementById('processProgress');
+    const processPercent = document.getElementById('processPercent');
     let detectionModel = null;
-    let detectionActive = false;
+    let isProcessing = false;
+    let frameCounter = 0;
+    let lastTimestamp = 0;
+    let detectedObjects = 0;
     let animationFrameId = null;
-
-    async function setupSystem() {
-        statusText.textContent = "Загрузка модулей...";
-
+    const transportClasses = ['car', 'truck', 'bus', 'motorcycle', 'van', 'suv'];
+    async function initSystem() {
+        statusText.textContent = "Загрузка системы...";
         try {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.1.0';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
             detectionModel = await cocoSsd.load();
-            statusText.textContent = "Система готова. Загрузите видео.";
-            statusText.className = "status-box no-target";
+            statusText.textContent = "Система готова. Загрузите видеофайл.";
+            statusText.className = "status-box status-ready";
         } catch (err) {
             statusText.textContent = "Ошибка загрузки: " + err.message;
-            statusText.className = "status-box detected";
+            statusText.className = "status-box status-detected";
         }
     }
-
     videoInput.addEventListener('change', function() {
         if (!this.files || !this.files[0]) return;
-
-        const mediaFile = this.files[0];
-
-        if (!mediaFile.type.includes('mp4')) {
-            statusText.textContent = "Ошибка: требуется MP4-файл";
-            statusText.className = "status-box detected";
+        const file = this.files[0];
+        if (file.size > 2147483648) {
+            statusText.textContent = "Ошибка: файл слишком большой (>2ГБ)";
+            statusText.className = "status-box status-detected";
             return;
         }
-
-        const mediaURL = URL.createObjectURL(mediaFile);
-        videoPlayer.src = mediaURL;
-
+        const fileType = file.type || file.name.split('.').pop();
+        if (fileType.includes('avi') || file.name.toLowerCase().endsWith('.avi')) {
+            if (!confirm("AVI-файлы могут обрабатываться медленнее. Продолжить?")) {
+                return;
+            }
+        }
+        const url = URL.createObjectURL(file);
+        videoPlayer.src = url;
         videoPlayer.onloadedmetadata = function() {
-            overlay.width = videoPlayer.videoWidth;
-            overlay.height = videoPlayer.videoHeight;
-
-            statusText.textContent = "Видео загружено. Запустите анализ.";
-            statusText.className = "status-box no-target";
+            overlayCanvas.width = videoPlayer.videoWidth;
+            overlayCanvas.height = videoPlayer.videoHeight;
+            statusText.textContent = "Видео загружено. Нажмите 'Запуск анализа'.";
+            statusText.className = "status-box status-ready";
             processBtn.disabled = false;
             resetBtn.disabled = false;
+            processProgress.value = 0;
+            processPercent.textContent = "0%";
+        };
+        videoPlayer.ontimeupdate = function() {
+            if (videoPlayer.duration) {
+                const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                processProgress.value = percent;
+                processPercent.textContent = `${Math.round(percent)}%`;
+            }
         };
     });
-
     processBtn.addEventListener('click', function() {
         if (!videoPlayer.src) return;
 
-        videoPlayer.play();
-        detectionActive = true;
+        videoPlayer.play().catch(err => {
+            statusText.textContent = "Ошибка воспроизведения: " + err.message;
+            statusText.className = "status-box status-detected";
+        });
+        isProcessing = true;
         processBtn.disabled = true;
         pauseBtn.disabled = false;
-
+        detectedObjects = 0;
+        frameCounter = 0;
         statusText.textContent = "Анализ видеопотока...";
         statusText.className = "status-box";
-
-        runDetection();
+        processVideo();
     });
-
     pauseBtn.addEventListener('click', function() {
-        detectionActive = false;
+        isProcessing = false;
         videoPlayer.pause();
         processBtn.disabled = false;
         pauseBtn.disabled = true;
-
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
         }
-
         statusText.textContent = "Анализ приостановлен";
         statusText.className = "status-box";
     });
-
     resetBtn.addEventListener('click', function() {
-        detectionActive = false;
+        isProcessing = false;
         videoPlayer.pause();
         videoPlayer.src = "";
-        overlay.width = 0;
-        overlay.height = 0;
+        overlayCanvas.width = 0;
+        overlayCanvas.height = 0;
         processBtn.disabled = true;
         pauseBtn.disabled = true;
         resetBtn.disabled = true;
         videoInput.value = "";
-
+        processProgress.value = 0;
+        processPercent.textContent = "0%";
         statusText.textContent = "Ожидание загрузки видео";
-        statusText.className = "status-box";
-
+        statusText.className = "status-box status-ready";
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
         }
     });
-
-    async function runDetection() {
-        if (!detectionActive || videoPlayer.paused || videoPlayer.ended) {
+    async function processVideo() {
+        if (!isProcessing || videoPlayer.paused || videoPlayer.ended) {
             pauseBtn.click();
             return;
         }
+        const startTime = performance.now();
+        frameCounter++;
 
         try {
-            ctx.clearRect(0, 0, overlay.width, overlay.height);
-            ctx.drawImage(videoPlayer, 0, 0, overlay.width, overlay.height);
-
-            const results = await detectionModel.detect(overlay);
-            let targetFound = false;
-
-            for (const item of results) {
-                if ((item.class === 'car' || item.class === 'motorcycle') && item.score > 0.6) {
-                    targetFound = true;
-
+            ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            ctx.drawImage(videoPlayer, 0, 0, overlayCanvas.width, overlayCanvas.height);
+            const predictions = await detectionModel.detect(overlayCanvas);
+            let frameObjects = 0;
+            for (const pred of predictions) {
+                if (transportClasses.includes(pred.class) && pred.score > 0.6) {
+                    frameObjects++;
+                    detectedObjects++;
                     ctx.beginPath();
-                    ctx.rect(...item.bbox);
+                    ctx.rect(...pred.bbox);
                     ctx.lineWidth = 3;
                     ctx.strokeStyle = '#f85149';
                     ctx.stroke();
-
                     ctx.fillStyle = '#f85149';
-                    ctx.font = '16px Arial';
+                    ctx.font = 'bold 16px Arial';
                     ctx.fillText(
-                        `${item.class} ${Math.round(item.score * 100)}%`,
-                        item.bbox[0],
-                        item.bbox[1] > 15 ? item.bbox[1] - 8 : 15
+                        `${pred.class} ${Math.round(pred.score * 100)}%`,
+                        pred.bbox[0],
+                        pred.bbox[1] > 20 ? pred.bbox[1] - 5 : 20
                     );
                 }
             }
-
-            if (targetFound) {
-                statusText.textContent = "ТРАНСПОРТ ОБНАРУЖЕН!";
-                statusText.className = "status-box detected";
+            if (frameObjects > 0) {
+                statusText.textContent = `Обнаружено транспорта: ${frameObjects}`;
+                statusText.className = "status-box status-detected";
             } else {
                 statusText.textContent = "Транспорт не обнаружен";
-                statusText.className = "status-box no-target";
+                statusText.className = "status-box status-ready";
             }
-
         } catch (err) {
-            statusText.textContent = "Ошибка обработки";
-            statusText.className = "status-box detected";
+            statusText.textContent = "Ошибка обработки кадра";
+            statusText.className = "status-box status-detected";
         }
-
-        animationFrameId = requestAnimationFrame(runDetection);
+        const endTime = performance.now();
+        if (endTime - lastTimestamp >= 1000) {
+            const fps = Math.round((frameCounter * 1000) / (endTime - lastTimestamp));
+            lastTimestamp = endTime;
+            frameCounter = 0;
+        }
+        animationFrameId = requestAnimationFrame(processVideo);
     }
-
-    window.addEventListener('load', setupSystem);
+    window.addEventListener('load', initSystem);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.1.0"></script>
 </body>
 </html>
